@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>King & Queen of SM OU Gauntlet</title>
+  <title>CT Pokemon Giveaway</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,7 +20,7 @@
     .row { display: flex; flex-wrap: wrap; gap: 1rem; }
     .col { flex: 1; min-width: 260px; }
     label { display: block; margin-top: 0.25rem; font-weight: bold; }
-    select, textarea {
+    select, textarea, input[type="text"] {
       width: 100%;
       padding: 0.25rem;
       margin-top: 0.15rem;
@@ -38,14 +38,6 @@
       font-size: 1rem;
       margin-top: 0.75rem;
       cursor: pointer;
-    }
-    #log {
-      white-space: pre-wrap;
-      font-family: "Consolas", monospace;
-      background: #f7f7f7;
-      padding: 0.75rem;
-      border-radius: 6px;
-      min-height: 4rem;
     }
     table {
       width: 100%;
@@ -170,6 +162,10 @@
       font-weight: bold;
       border-radius: 10px;
     }
+    .big-sim-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
     /* Progress tracker */
     .progress-wrap {
@@ -231,9 +227,7 @@
       margin: 0.4rem 0 0.2rem 0;
       flex-wrap: wrap;
     }
-    .chosen-move-wrap select {
-      max-width: 320px;
-    }
+    .chosen-move-wrap select { max-width: 320px; }
 
     .share-btn {
       display: block;
@@ -245,18 +239,37 @@
       font-weight: bold;
       border-radius: 10px;
     }
-
   </style>
 </head>
 <body>
-  <h1>King & Queen of SM OU Gauntlet</h1>
+  <h1>CT Pokemon Giveaway (King & Queen of SM OU Gauntlet)</h1>
 
+  
   <div class="card">
+    <h2>Welcome</h2>
+    <p class="note" style="font-size:1rem;">Please type in your Discord name in the provided space below before you start.
+    </p>
+    <div style="margin:0.75rem 0;">
+      <label for="playerName">Your Discord name / tag (required to participate)</label>
+      <input id="playerName" type="text" placeholder="e.g. jane#1234" />
+      <div class="note" style="margin-top:0.25rem;">This will be included on your SHARE RESULTS image.</div>
+    </div>
+  </div>
+
+<div class="card">
     <h2>How to Play</h2>
 
     <p class="note" style="font-size:1rem;">
-      Hello and welcome! <strong>Landorus‑T</strong> and <strong>Magearna</strong> are two of the most-used Pokémon in competitive Sun &amp; Moon OU, and each can defeat the other depending on how they’re built. In this gauntlet, your goal is to play <strong>both matchups</strong> and win them both. Please read the steps below before you start (there is no time limit).
+      <strong>Landorus-Therian</strong> and <strong>Magearna</strong> are two of the most-used Pokémon in competitive Sun &amp; Moon OU, and each can defeat the other depending on how they’re built. In this gauntlet, your goal is to play <strong>both matchups</strong> and win them both. Please read the steps below before you start (there is no time limit).
     </p>
+
+
+    
+    <p class="note" style="font-size:0.98rem; font-weight:bold;">
+      <strong>Important:</strong>
+      Each simulation is only <strong>one turn</strong>. The faster Pokémon moves first, then the other Pokémon attacks if it survives. 
+      To clear a gauntlet, you must make the opponent’s Pokémon faint within that single turn. Plan your build and move with that in mind.
+</p>
 
     <ol>
       <li><strong>Choose your Pokémon</strong> (the other becomes the opponent).</li>
@@ -267,16 +280,14 @@
     </ol>
 
     <p class="note" style="font-size:0.95rem;">
-      Winners are decided by the <strong>fewest total attempts</strong>. Each attempt comes with a battle log, learn from it and make appropriate changes.
+      Winners are decided by the <strong>fewest total attempts</strong>. Each attempt comes with a battle log—learn from it and make appropriate changes.
     </p>
-    <p class="note" style="font-size:0.95rem;">
-      Have Fun! :)
-    </p>
+    <p class="note" style="font-size:0.95rem;">Have Fun! :)</p>
   </div>
 
   <div class="card">
     <h2>Your Build & Live Stats</h2>
-<div class="row">
+    <div class="row">
       <div class="col">
         <label for="playerPokemon">Your Pokémon</label>
         <select id="playerPokemon">
@@ -299,7 +310,7 @@
       Hints:
       <ul>
         <li>Higher Speed Pokémon moves first.</li>
-        <li>Landorus-T uses its <strong>Attack</strong> stat (mitigated by <strong>Defense</strong> stat).</li>
+        <li>Landorus‑T uses its <strong>Attack</strong> stat (mitigated by <strong>Defense</strong> stat).</li>
         <li>Magearna uses its <strong>Special Attack</strong> stat (mitigated by <strong>Special Defense</strong> stat).</li>
         <li>There are multiple ways to win these 2 matchups — a good approach is to win one aggressively and the other defensively.</li>
       </ul>
@@ -377,7 +388,6 @@
       </div>
     </div>
 
-    <!-- Battlefield with sprites + health bars -->
     <div id="battlefield" class="battlefield" style="position:relative;">
       <div class="battle-side battle-left">
         <div class="hpbox">
@@ -486,6 +496,7 @@
         : ["Jolly", "Adamant", "Careful"];
     }
 
+    // PLAYER-CHOOSABLE ITEMS (Focus Sash removed, Silk Scarf & Metal Coat added)
     const items = [
       { id: "choiceband",    name: "Choice Band",    description: "Boosts Attack by 50% but locks you into one move.", effect: { attackMultiplier: 1.5 } },
       { id: "choicescarf",   name: "Choice Scarf",   description: "Boosts Speed by 50% but locks you into one move.", effect: { speedMultiplier: 1.5 } },
@@ -637,6 +648,7 @@
     const playerNatureEl  = document.getElementById("playerNature");
     const playerItemEl    = document.getElementById("playerItem");
     const playerMoveEl    = document.getElementById("playerMove");
+    const playerNameEl    = document.getElementById("playerName");
 
     const evInputs = {
       hp: document.getElementById("evHP"),
@@ -673,10 +685,8 @@
     const checkLandoEl = document.getElementById("checkLando");
     const subMagearnaEl = document.getElementById("subMagearna");
     const subLandoEl = document.getElementById("subLando");
-
     const shareBtn = document.getElementById("shareBtn");
     const shareNoteEl = document.getElementById("shareNote");
-
 
     const playerSpriteEl   = document.getElementById("playerSprite");
     const opponentSpriteEl = document.getElementById("opponentSprite");
@@ -690,6 +700,7 @@
 
     // Persisted progress (localStorage)
     const STORAGE_KEY = "gauntlet_progress_v1";
+    const NAME_KEY = "gauntlet_player_name_v1";
 
     function loadProgress() {
       try {
@@ -712,13 +723,25 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     }
 
+    function loadName() {
+      return (localStorage.getItem(NAME_KEY) || "").trim();
+    }
+    function saveName(name) {
+      localStorage.setItem(NAME_KEY, (name || "").trim());
+    }
+    function isNameValid() {
+      return playerNameEl.value.trim().length > 0;
+    }
+    function updateSimulateEnabled() {
+      simulateBtn.disabled = !isNameValid();
+    }
+
     let { attemptsMagearna, attemptsLando, firstWinMagearna, firstWinLando } = loadProgress();
 
     function updateGauntletInfo() {
       const magearnaCleared = firstWinMagearna !== null;
       const landoCleared = firstWinLando !== null;
 
-      // Magearna card
       progressMagearnaEl.classList.toggle("progress-done", magearnaCleared);
       progressMagearnaEl.classList.toggle("progress-pending", !magearnaCleared);
       checkMagearnaEl.textContent = magearnaCleared ? "✅" : "⬜";
@@ -726,7 +749,6 @@
         ? `Cleared on attempt #${firstWinMagearna}.`
         : `Attempts so far: ${attemptsMagearna}.`;
 
-      // Lando card
       progressLandoEl.classList.toggle("progress-done", landoCleared);
       progressLandoEl.classList.toggle("progress-pending", !landoCleared);
       checkLandoEl.textContent = landoCleared ? "✅" : "⬜";
@@ -770,13 +792,7 @@
       const pokemonId = playerPokemonEl.value;
       const options = natureOptionsFor(pokemonId);
       playerNatureEl.innerHTML = "";
-      const statNamesLong = {
-        atk: "Attack",
-        def: "Defense",
-        spa: "Special Attack",
-        spd: "Special Defense",
-        spe: "Speed"
-      };
+      const statNamesLong = { atk: "Attack", def: "Defense", spa: "Special Attack", spd: "Special Defense", spe: "Speed" };
       options.forEach(n => {
         const opt = document.createElement("option");
         opt.value = n;
@@ -793,7 +809,6 @@
       const pData = pokemonData[pokemonId];
       playerMoveEl.innerHTML = "";
       playerMovesTableBody.innerHTML = "";
-
       pData.moves.forEach(m => {
         const opt = document.createElement("option");
         opt.value = m.id;
@@ -802,8 +817,7 @@
 
         const tr = document.createElement("tr");
         const stab = pData.types.includes(m.type) ? "Yes" : "No";
-        tr.innerHTML =
-          `<td>${m.name}</td><td>${m.type}</td><td>${m.category}</td><td>${m.power}</td><td>${stab}</td>`;
+        tr.innerHTML = `<td>${m.name}</td><td>${m.type}</td><td>${m.category}</td><td>${m.power}</td><td>${stab}</td>`;
         playerMovesTableBody.appendChild(tr);
       });
     }
@@ -936,10 +950,6 @@
         const isSE = getTypeEffectiveness(move.type, defender.types) > 1;
         if (isSE && move.type === defEff.berryType) damage = Math.floor(damage / 2);
       }
-
-      if (defEff.focusSash && defender.hp === defender.maxHP && damage >= defender.hp) {
-        damage = defender.hp - 1;
-      }
       return damage;
     }
 
@@ -958,6 +968,13 @@
     function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
 
     async function runSimulation() {
+      if (!isNameValid()) {
+        alert("Please enter your Discord name / tag before battling.");
+        playerNameEl.focus();
+        updateSimulateEnabled();
+        return;
+      }
+
       simulateBtn.disabled = true;
 
       const playerId = playerPokemonEl.value;
@@ -966,7 +983,6 @@
       saveProgress();
 
       const player = buildStatsFor(playerId, playerNatureEl.value, getEVInputs(), playerItemEl.value);
-
       const { opponentId, preset } = getOpponentDataForCurrentPlayer();
       const opponent = buildStatsFor(opponentId, preset.nature, preset.evs, preset.itemId);
 
@@ -978,15 +994,10 @@
       opponentSpriteEl.classList.remove("fainted");
 
       const playerFirst = player.spe >= opponent.spe;
-
       let log = "";
 
       async function attack(attacker, defender, move, attackerItemId, defenderItemId, attackerLabel, defenderLabel) {
-        let { damage, typeMult } = calcDamage({
-          level: LEVEL,
-          attacker, defender, move, attackerItemId
-        });
-
+        let { damage, typeMult } = calcDamage({ level: LEVEL, attacker, defender, move, attackerItemId });
         damage = applyDefensiveItems(defender, move, defenderItemId, damage);
 
         const isOpp = attackerLabel.startsWith("Opponent");
@@ -998,24 +1009,18 @@
         defender.hp = Math.max(0, defender.hp - damage);
         updateHPUI(player, opponent);
 
-        log += `${attackerLabel} ${attacker.name} used ${shownMoveName}!
-`;
+        log += `${attackerLabel} ${attacker.name} used ${shownMoveName}!\n`;
 
         if (!isOpp) {
-          if (typeMult === 0) log += `It had no effect...
-`;
+          if (typeMult === 0) log += `It had no effect...\n`;
           else {
-            if (typeMult > 1) log += `It's super effective!
-`;
-            if (typeMult < 1) log += `It's not very effective...
-`;
+            if (typeMult > 1) log += `It's super effective!\n`;
+            if (typeMult < 1) log += `It's not very effective...\n`;
           }
         }
 
-        log += `${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).
-`;
-        if (defender.hp <= 0) log += `${defenderLabel} ${defender.name} fainted!
-`;
+        log += `${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).\n`;
+        if (defender.hp <= 0) log += `${defenderLabel} ${defender.name} fainted!\n`;
 
         logEl.textContent = log;
         await sleep(650);
@@ -1059,8 +1064,7 @@
       }
 
       updateGauntletInfo();
-
-      simulateBtn.disabled = false;
+      updateSimulateEnabled(); // re-enable if name still valid
     }
 
     function setDefaultEVsForPokemon() {
@@ -1082,26 +1086,27 @@
 
     playerPokemonEl.addEventListener("change", onPlayerPokemonChange);
     playerNatureEl.addEventListener("change", updateLivePanels);
-    playerItemEl.addEventListener("change", () => {
-      updateItemInfo();
-      updateLivePanels();
-    });
+    playerItemEl.addEventListener("change", () => { updateItemInfo(); updateLivePanels(); });
     playerMoveEl.addEventListener("change", updateLivePanels);
     Object.values(evInputs).forEach(inp => inp.addEventListener("input", updateLivePanels));
-
     simulateBtn.addEventListener("click", runSimulation);
 
+    // Name persistence + enable/disable simulate
+    playerNameEl.addEventListener("input", () => {
+      saveName(playerNameEl.value);
+      updateSimulateEnabled();
+    });
+
     async function generateShareImageBlob() {
-      const width = 700, height = 380;
+      const width = 700, height = 420;
       const canvas = document.createElement("canvas");
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d");
+      const playerName = (playerNameEl.value || "").trim() || "Unknown";
 
-      // background
       ctx.fillStyle = "#f8fafc";
       ctx.fillRect(0,0,width,height);
 
-      // border
       ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 4;
       ctx.strokeRect(10,10,width-20,height-20);
@@ -1110,24 +1115,27 @@
       ctx.font = "bold 28px Arial";
       ctx.fillText("Magearna & Landorus‑Therian Gauntlet", 40, 60);
 
+      ctx.font = "bold 20px Arial";
+      ctx.fillStyle = "#0f172a";
+      ctx.fillText(`Player: ${playerName}`, 40, 95);
+
       ctx.font = "bold 22px Arial";
       ctx.fillStyle = "#16a34a";
-      ctx.fillText("COMPLETED ✅", 40, 105);
+      ctx.fillText("COMPLETED ✅", 40, 135);
 
       ctx.fillStyle = "#0f172a";
       ctx.font = "20px Arial";
-      ctx.fillText(`Magearna cleared on attempt #${firstWinMagearna}`, 40, 160);
-      ctx.fillText(`Landorus‑Therian cleared on attempt #${firstWinLando}`, 40, 200);
+      ctx.fillText(`Magearna cleared on attempt #${firstWinMagearna}`, 40, 200);
+      ctx.fillText(`Landorus‑Therian cleared on attempt #${firstWinLando}`, 40, 240);
 
       ctx.font = "18px Arial";
       ctx.fillStyle = "#334155";
-      ctx.fillText("Send this screenshot to Kevin on Discord.", 40, 260);
+      ctx.fillText("Send this screenshot to Kevin on Discord.", 40, 305);
 
-      // timestamp (not super helpful for cheating but nice)
       const ts = new Date().toLocaleString();
       ctx.font = "14px Arial";
       ctx.fillStyle = "#64748b";
-      ctx.fillText(ts, 40, 320);
+      ctx.fillText(ts, 40, 360);
 
       return await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     }
@@ -1141,7 +1149,6 @@
           await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
           shareNoteEl.textContent = "Copied an image to your clipboard!";
         } else {
-          // fallback: download
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -1166,6 +1173,10 @@
       setDefaultEVsForPokemon();
       updateLivePanels();
       updateGauntletInfo();
+
+      // restore saved name and enable/disable simulate
+      playerNameEl.value = loadName();
+      updateSimulateEnabled();
     })();
   </script>
 </body>
