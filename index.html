@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>King & Queen of SM OU Gauntlet</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h1, h2 { text-align: center; }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .col { flex: 1; min-width: 260px; }
+    label { display: block; margin-top: 0.25rem; font-weight: bold; }
+    select, textarea {
+      width: 100%;
+      padding: 0.25rem;
+      margin-top: 0.15rem;
+      box-sizing: border-box;
+    }
+    input[type="range"] { width: 100%; }
+    .ev-control { margin-bottom: 0.4rem; }
+    .ev-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-top: 0.75rem;
+      cursor: pointer;
+    }
+    #log {
+      white-space: pre-wrap;
+      font-family: "Consolas", monospace;
+      background: #f7f7f7;
+      padding: 0.75rem;
+      border-radius: 6px;
+      min-height: 4rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.3rem 0.4rem;
+      text-align: left;
+    }
+    th { background: #f0f0f0; }
+    .stat-table td:nth-child(1) { font-weight: bold; }
+    .note { font-size: 0.85rem; color: #555; }
+    .highlight { font-weight: bold; color: #006600; }
+
+    /* Bigger hints */
+    .hints {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+    .hints ul { margin: 0.4rem 0 0 1.2rem; }
+
+    /* Battlefield + sprites */
+    .battlefield {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+      padding: 1rem 2rem;
+      background: #f4f8ff;
+      border-radius: 8px;
+      gap: 2rem;
+    }
+    .battle-side {
+      width: 40%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      position: relative;
+    }
+    .sprite {
+      max-width: 220px;
+      height: auto;
+      transition: transform 0.15s ease-out, filter 0.15s ease-out, opacity 0.15s ease-out;
+    }
+    /* Left = player, always face right (mirror) */
+    .sprite-left { transform: scaleX(-1); }
+    /* Right = opponent, original art faces left */
+    .sprite-right { transform: scaleX(1); }
+
+    /* Attack animations */
+    @keyframes attackLeft {
+      0%   { transform: scaleX(-1) translateX(0); }
+      50%  { transform: scaleX(-1) translateX(30px); }
+      100% { transform: scaleX(-1) translateX(0); }
+    }
+    @keyframes attackRight {
+      0%   { transform: scaleX(1) translateX(0); }
+      50%  { transform: scaleX(1) translateX(-30px); }
+      100% { transform: scaleX(1) translateX(0); }
+    }
+    .sprite-attack-left  { animation: attackLeft 0.35s ease-out; }
+    .sprite-attack-right { animation: attackRight 0.35s ease-out; }
+
+    @keyframes hitFlash {
+      0%   { filter: brightness(1); }
+      50%  { filter: brightness(1.6); }
+      100% { filter: brightness(1); }
+    }
+    .hit-flash { animation: hitFlash 0.25s ease-out; }
+
+    .fainted {
+      filter: grayscale(1) brightness(0.6);
+      opacity: 0.55;
+    }
+
+    /* Simple health bars */
+    .hpbox {
+      width: 100%;
+      max-width: 260px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.4rem 0.55rem;
+      box-sizing: border-box;
+    }
+    .hpname {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+      text-align: center;
+    }
+    .hpbar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .hpfill {
+      height: 100%;
+      width: 100%;
+      transition: width 0.6s ease;
+    }
+    .hptext {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 0.25rem;
+    }
+
+    .big-sim-btn {
+      display: block;
+      width: 100%;
+      max-width: 420px;
+      margin: 0.75rem auto 0.5rem auto;
+      padding: 0.9rem 1.2rem;
+      font-size: 1.25rem;
+      font-weight: bold;
+      border-radius: 10px;
+    }
+
+    /* Progress tracker */
+    .progress-wrap {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 0.75rem 0;
+    }
+    .progress-card {
+      flex: 1;
+      min-width: 240px;
+      max-width: 360px;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      text-align: center;
+      background: #fafafa;
+    }
+    .progress-title { font-size: 1.15rem; font-weight: bold; }
+    .progress-check {
+      font-size: 2.5rem;
+      line-height: 1;
+      margin: 0.25rem 0 0.5rem 0;
+    }
+    .progress-sub { font-size: 0.95rem; }
+    .progress-done {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+    .progress-done .progress-check { color: #16a34a; }
+    .progress-pending .progress-check { color: #9ca3af; }
+
+    /* Battlefield log in the middle */
+    .battle-log-box {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0.5rem;
+      width: 30%;
+      min-width: 30%;
+      max-width: 30%;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      font-family: "Consolas", monospace;
+      pointer-events: none;
+    }
+
+    /* Chosen-move area under simulate button */
+    .chosen-move-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.4rem 0 0.2rem 0;
+      flex-wrap: wrap;
+    }
+    .chosen-move-wrap select {
+      max-width: 320px;
+    }
+
+    .share-btn {
+      display: block;
+      width: 100%;
+      max-width: 420px;
+      margin: 0.5rem auto 0 auto;
+      padding: 0.8rem 1.1rem;
+      font-size: 1.15rem;
+      font-weight: bold;
+      border-radius: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>King & Queen of SM OU Gauntlet</h1>
+
+  <div class="card">
+    <h2>How to Play</h2>
+
+    <p class="note" style="font-size:1rem;">
+      Hello and welcome! <strong>Landorus‑T</strong> and <strong>Magearna</strong> are two of the most-used Pokémon in competitive Sun &amp; Moon OU, and each can defeat the other depending on how they’re built. In this gauntlet, your goal is to play <strong>both matchups</strong> and win them both. Please read the steps below before you start (there is no time limit).
+    </p>
+
+    <ol>
+      <li><strong>Choose your Pokémon</strong> (the other becomes the opponent).</li>
+      <li><strong>Set your build:</strong> pick a Nature, choose a Held Item, then assign your EVs.</li>
+      <li><strong>Check stats </strong>(they change as you build).</li>
+      <li><strong>When you’re ready to attempt, pick your move</strong> and click <strong>SIMULATE BATTLE</strong>.</li>
+      <li><strong>If you win, switch to the other Pokémon and clear that matchup too.</strong> Your progress tracker is at the <strong>very bottom</strong> of the page.</li>
+    </ol>
+
+    <p class="note" style="font-size:0.95rem;">
+      Winners are decided by the <strong>fewest total attempts</strong>. Each attempt comes with a battle log, learn from it and make appropriate changes.
+    </p>
+    <p class="note" style="font-size:0.95rem;">
+      Have Fun! :)
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Your Build & Live Stats</h2>
+<div class="row">
+      <div class="col">
+        <label for="playerPokemon">Your Pokémon</label>
+        <select id="playerPokemon">
+          <option value="magearna">Magearna</option>
+          <option value="landorus-t">Landorus-Therian</option>
+        </select>
+      </div>
+      <div class="col">
+        <label for="playerNature">Nature <span class="note">(1 stat up by 10%, 1 stat down by 10%)</span></label>
+        <select id="playerNature"></select>
+      </div>
+      <div class="col">
+        <label for="playerItem">Held Item <span class="note">(provides special effects)</span></label>
+        <select id="playerItem"></select>
+        <div id="itemInfo" class="note" style="margin-top:0.4rem;"></div>
+      </div>
+    </div>
+
+    <p class="hints">
+      Hints:
+      <ul>
+        <li>Higher Speed Pokémon moves first.</li>
+        <li>Landorus-T uses its <strong>Attack</strong> stat (mitigated by <strong>Defense</strong> stat).</li>
+        <li>Magearna uses its <strong>Special Attack</strong> stat (mitigated by <strong>Special Defense</strong> stat).</li>
+        <li>There are multiple ways to win these 2 matchups — a good approach is to win one aggressively and the other defensively.</li>
+      </ul>
+    </p>
+
+    <h3>Your EVs <span class="note">(EVs are points you add to your chosen stats)</span></h3>
+    <p class="note"><strong>Tip:</strong> You can max out up to <strong>510 EVs</strong> total — using as many as possible improves your chances.</p>
+
+    <div class="row">
+      <div class="col">
+        <div class="ev-control">
+          <div class="ev-label-row"><span>HP EV</span><span id="evHPVal">0</span></div>
+          <input type="range" id="evHP" min="0" max="252" value="0">
+        </div>
+        <div class="ev-control">
+          <div class="ev-label-row"><span>Attack EV</span><span id="evAtkVal">0</span></div>
+          <input type="range" id="evAtk" min="0" max="252" value="0">
+        </div>
+        <div class="ev-control">
+          <div class="ev-label-row"><span>Defense EV</span><span id="evDefVal">0</span></div>
+          <input type="range" id="evDef" min="0" max="252" value="0">
+        </div>
+      </div>
+      <div class="col">
+        <div class="ev-control">
+          <div class="ev-label-row"><span>Special Attack EV</span><span id="evSpAVal">0</span></div>
+          <input type="range" id="evSpA" min="0" max="252" value="0">
+        </div>
+        <div class="ev-control">
+          <div class="ev-label-row"><span>Special Defense EV</span><span id="evSpDVal">0</span></div>
+          <input type="range" id="evSpD" min="0" max="252" value="0">
+        </div>
+        <div class="ev-control">
+          <div class="ev-label-row"><span>Speed EV</span><span id="evSpeVal">0</span></div>
+          <input type="range" id="evSpe" min="0" max="252" value="0">
+        </div>
+      </div>
+    </div>
+    <p class="note" id="evTotalNote"></p>
+
+    <div class="row" style="margin-top:1rem;">
+      <div class="col">
+        <h3>Your Stats (Level 100)</h3>
+        <p id="playerSummary"></p>
+        <table class="stat-table">
+          <thead><tr><th>Stat</th><th>Value</th></tr></thead>
+          <tbody id="playerStatsBody"></tbody>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Opponent Stats (Level 100, fixed)</h3>
+        <p id="opponentSummary"></p>
+        <table class="stat-table">
+          <thead><tr><th>Stat</th><th>Value</th></tr></thead>
+          <tbody id="opponentStatsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="note" id="speedComparisonNote"></p>
+  </div>
+
+  <div class="card">
+    <h2>Moves & Battle</h2>
+
+    <div class="row">
+      <div class="col">
+        <h3>Available Moves <span class="note">(STAB: moves that match your Pokémon’s type deal 1.5× damage)</span></h3>
+        <table>
+          <thead>
+            <tr><th>Move</th><th>Type</th><th>Category</th><th>Power</th><th>STAB?</th></tr>
+          </thead>
+          <tbody id="playerMovesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Battlefield with sprites + health bars -->
+    <div id="battlefield" class="battlefield" style="position:relative;">
+      <div class="battle-side battle-left">
+        <div class="hpbox">
+          <div id="playerHPName" class="hpname">Your Pokémon</div>
+          <div class="hpbar"><div id="playerHPFill" class="hpfill"></div></div>
+          <div id="playerHPText" class="hptext"></div>
+        </div>
+        <img id="playerSprite" class="sprite sprite-left" src="img/magearna.png" alt="Your Pokémon">
+      </div>
+
+      <div class="chosen-move-wrap" style="position:absolute; top:0.6rem; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); padding:0.35rem 0.6rem; border:1px solid #cbd5e1; border-radius:8px;">
+        <label for="playerMove"><strong>Chosen Move:</strong></label>
+        <select id="playerMove"></select>
+      </div>
+
+      <div id="battleLogBox" class="battle-log-box"></div>
+
+      <div class="battle-side battle-right">
+        <div class="hpbox">
+          <div id="opponentHPName" class="hpname">Opponent Pokémon</div>
+          <div class="hpbar"><div id="opponentHPFill" class="hpfill"></div></div>
+          <div id="opponentHPText" class="hptext"></div>
+        </div>
+        <img id="opponentSprite" class="sprite sprite-right" src="img/landorus-t.png" alt="Opponent Pokémon">
+      </div>
+    </div>
+
+    <button id="simulateBtn" class="big-sim-btn">Simulate Battle</button>
+  </div>
+
+  <div class="card">
+    <h2>Gauntlet Progress</h2>
+    <div class="progress-wrap">
+      <div id="progressMagearna" class="progress-card progress-pending">
+        <div class="progress-title">Magearna Gauntlet</div>
+        <div id="checkMagearna" class="progress-check">⬜</div>
+        <div id="subMagearna" class="progress-sub">Not cleared yet.</div>
+      </div>
+      <div id="progressLando" class="progress-card progress-pending">
+        <div class="progress-title">Landorus‑Therian Gauntlet</div>
+        <div id="checkLando" class="progress-check">⬜</div>
+        <div id="subLando" class="progress-sub">Not cleared yet.</div>
+      </div>
+    </div>
+    <p id="gauntletInfo" class="hints" style="text-align:center; font-weight:bold;"></p>
+    <button id="shareBtn" class="share-btn" disabled>SHARE RESULTS</button>
+    <p id="shareNote" class="note" style="text-align:center;"></p>
+  </div>
+
+  <script>
+    const LEVEL = 100;
+
+    const pokemonData = {
+      "magearna": {
+        name: "Magearna",
+        types: ["Steel", "Fairy"],
+        baseStats: { hp: 80, atk: 95, def: 115, spa: 130, spd: 115, spe: 65 },
+        moves: [
+          { id: "hyperbeam",    name: "Hyper Beam",    type: "Normal",  category: "Special", power: 150 },
+          { id: "fleurcannon",  name: "Fleur Cannon",  type: "Fairy",   category: "Special", power: 130 },
+          { id: "focusblast",   name: "Focus Blast",   type: "Fighting",category: "Special", power: 120 },
+          { id: "energyball",   name: "Energy Ball",   type: "Grass",   category: "Special", power: 90 },
+          { id: "icebeam",      name: "Ice Beam",      type: "Ice",     category: "Special", power: 90 },
+          { id: "thunderbolt",  name: "Thunderbolt",   type: "Electric",category: "Special", power: 90 },
+          { id: "flashcannon",  name: "Flash Cannon",  type: "Steel",   category: "Special", power: 80 }
+        ],
+        opponentMoves: [
+          { id: "fleurcannon",  name: "Fleur Cannon",  type: "Fairy",   category: "Special", power: 130 },
+          { id: "focusblast",   name: "Focus Blast",   type: "Fighting",category: "Special", power: 120 },
+          { id: "icebeam",      name: "Ice Beam",      type: "Ice",     category: "Special", power: 90 },
+          { id: "thunderbolt",  name: "Thunderbolt",   type: "Electric",category: "Special", power: 90 }
+        ]
+      },
+      "landorus-t": {
+        name: "Landorus-Therian",
+        types: ["Ground", "Flying"],
+        baseStats: { hp: 89, atk: 145, def: 90, spa: 105, spd: 80, spe: 91 },
+        moves: [
+          { id: "explosion",    name: "Explosion",     type: "Normal",  category: "Physical", power: 250 },
+          { id: "gigaimpact",   name: "Giga Impact",   type: "Normal",  category: "Physical", power: 150 },
+          { id: "outrage",      name: "Outrage",       type: "Dragon",  category: "Physical", power: 120 },
+          { id: "superpower",   name: "Superpower",    type: "Fighting",category: "Physical", power: 120 },
+          { id: "earthquake",   name: "Earthquake",    type: "Ground",  category: "Physical", power: 100 }
+        ],
+        opponentMoves: [
+          { id: "earthquake",   name: "Earthquake",    type: "Ground",  category: "Physical", power: 100 },
+          { id: "stoneedge",    name: "Stone Edge",    type: "Rock",    category: "Physical", power: 100 },
+          { id: "explosion",    name: "Explosion",     type: "Normal",  category: "Physical", power: 250 },
+          { id: "u-turn",       name: "U-turn",        type: "Bug",     category: "Physical", power: 70 }
+        ]
+      }
+    };
+
+    const natures = {
+      "Jolly":   { plus: "spe", minus: "spa" },
+      "Adamant": { plus: "atk", minus: "spa" },
+      "Careful": { plus: "spd", minus: "spa" },
+      "Modest":  { plus: "spa", minus: "atk" },
+      "Timid":   { plus: "spe", minus: "atk" },
+      "Bold":    { plus: "def", minus: "atk" }
+    };
+
+    function natureOptionsFor(pokemonId) {
+      return pokemonId === "magearna"
+        ? ["Modest", "Timid", "Bold"]
+        : ["Jolly", "Adamant", "Careful"];
+    }
+
+    const items = [
+      { id: "choiceband",    name: "Choice Band",    description: "Boosts Attack by 50% but locks you into one move.", effect: { attackMultiplier: 1.5 } },
+      { id: "choicescarf",   name: "Choice Scarf",   description: "Boosts Speed by 50% but locks you into one move.", effect: { speedMultiplier: 1.5 } },
+      { id: "choicespecs",   name: "Choice Specs",   description: "Boosts Special Attack by 50% but locks you into one move.", effect: { spAttackMultiplier: 1.5 } },
+      { id: "nevermeltingice", name: "Never-Melt Ice", description: "Boosts the power of Ice-type moves (about 20%).", effect: { typeBoost: { type: "Ice", multiplier: 1.2 } } },
+      { id: "softsand",      name: "Soft Sand",      description: "Boosts the power of Ground-type moves (about 20%).", effect: { typeBoost: { type: "Ground", multiplier: 1.2 } } },
+      { id: "silkscarf",     name: "Silk Scarf",     description: "Boosts the power of Normal-type moves (about 20%).", effect: { typeBoost: { type: "Normal", multiplier: 1.2 } } },
+      { id: "metalcoat",     name: "Metal Coat",     description: "Boosts the power of Steel-type moves (about 20%).", effect: { typeBoost: { type: "Steel", multiplier: 1.2 } } },
+      { id: "lifeorb",       name: "Life Orb",       description: "Boosts damage by 30% at the cost of recoil (recoil ignored here).", effect: { damageMultiplier: 1.3 } },
+      { id: "expertbelt",    name: "Expert Belt",    description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
+      { id: "yacheberry",    name: "Yache Berry",    description: "Halves damage from one super-effective Ice-type move.", effect: { berryType: "Ice" } },
+      { id: "shucaberry",    name: "Shuca Berry",    description: "Halves damage from one super-effective Ground-type move.", effect: { berryType: "Ground" } }
+    ];
+
+    const opponentPresets = {
+      "magearna": {
+        nature: "Timid",
+        evs: { hp: 0, atk: 0, def: 252, spa: 164, spd: 0, spe: 92 },
+        itemId: "choicescarf",
+        willUseMoveId: "icebeam"
+      },
+      "landorus-t": {
+        nature: "Adamant",
+        evs: { hp: 128, atk: 252, def: 0, spa: 0, spd: 128, spe: 0 },
+        itemId: "softsand",
+        willUseMoveId: "earthquake"
+      }
+    };
+
+    const spritePaths = {
+      "magearna": "img/magearna.png",
+      "landorus-t": "img/landorus-t.png"
+    };
+
+    function getNatureModifier(natureName, stat) {
+      if (!natureName || !natures[natureName]) return 1.0;
+      const n = natures[natureName];
+      if (n.plus === stat) return 1.1;
+      if (n.minus === stat) return 0.9;
+      return 1.0;
+    }
+    function calcHPStat(base, ev, level = LEVEL, iv = 31) {
+      return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
+    }
+    function calcOtherStat(base, ev, natureName, statKey, level = LEVEL, iv = 31) {
+      const raw = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5;
+      return Math.floor(raw * getNatureModifier(natureName, statKey));
+    }
+
+    const typeChart = {
+      "Normal": { "Steel": 0.5 },
+      "Fairy":  { "Dragon": 2, "Steel": 0.5 },
+      "Fighting": { "Steel": 2, "Fairy": 0.5, "Flying": 0.5 },
+      "Grass": { "Ground": 2, "Flying": 0.5, "Steel": 0.5 },
+      "Dragon": { "Fairy": 0, "Steel": 0.5 },
+      "Ice": { "Ground": 2, "Flying": 2, "Steel": 0.5 },
+      "Electric": { "Ground": 0, "Flying": 2 },
+      "Steel": { "Fairy": 2 },
+      "Ground": { "Steel": 2, "Electric": 2, "Flying": 0 },
+      "Rock": { "Flying": 2 },
+      "Bug": { "Grass": 2 }
+    };
+    function getTypeEffectiveness(moveType, targetTypes) {
+      let mult = 1;
+      for (const t of targetTypes) {
+        const row = typeChart[moveType];
+        if (row && Object.prototype.hasOwnProperty.call(row, t)) mult *= row[t];
+      }
+      return mult;
+    }
+
+    function getItemOffensiveMultipliers(itemId, move) {
+      const item = items.find(i => i.id === itemId);
+      if (!item) return { atk: 1, spa: 1, spe: 1, dmg: 1, typeBoost: null, expertBelt: false };
+      const eff = item.effect || {};
+      return {
+        atk: move.category === "Physical" && eff.attackMultiplier ? eff.attackMultiplier : 1,
+        spa: move.category === "Special" && eff.spAttackMultiplier ? eff.spAttackMultiplier : 1,
+        spe: eff.speedMultiplier || 1,
+        dmg: eff.damageMultiplier || 1,
+        typeBoost: eff.typeBoost || null,
+        expertBelt: !!eff.expertBelt
+      };
+    }
+    function getItemDefensiveEffects(itemId) {
+      const item = items.find(i => i.id === itemId);
+      if (!item) return {};
+      const eff = item.effect || {};
+      return { berryType: eff.berryType || null, focusSash: !!eff.focusSash };
+    }
+
+    function calcDamage({ level, attacker, defender, move, attackerItemId }) {
+      const category = move.category;
+      const atkStat = category === "Physical" ? attacker.atk : attacker.spa;
+      const defStat = category === "Physical" ? defender.def : defender.spd;
+
+      const itemMults = getItemOffensiveMultipliers(attackerItemId, move);
+      const effectiveAtk = category === "Physical"
+        ? atkStat * itemMults.atk
+        : atkStat * itemMults.spa;
+
+      let baseDamage = Math.floor(
+        Math.floor(
+          (((2 * level) / 5 + 2) * move.power * (effectiveAtk / defStat)) / 50
+        ) + 2
+      );
+
+      const stab = attacker.types.includes(move.type) ? 1.5 : 1.0;
+      const typeMult = getTypeEffectiveness(move.type, defender.types) || 1;
+      const randomFactor = 0.925; // average roll
+
+      let typeBoostMult = 1;
+      if (itemMults.typeBoost && itemMults.typeBoost.type === move.type) {
+        typeBoostMult *= itemMults.typeBoost.multiplier;
+      }
+
+      let expertBeltMult = 1;
+      if (itemMults.expertBelt && typeMult > 1) expertBeltMult = 1.2;
+
+      const finalDamage = Math.floor(
+        baseDamage * stab * typeMult * randomFactor * itemMults.dmg * typeBoostMult * expertBeltMult
+      );
+
+      return { damage: finalDamage, stab, typeMult };
+    }
+
+    function buildStatsFor(pokemonId, natureName, evs, itemId) {
+      const pData = pokemonData[pokemonId];
+      const base = pData.baseStats;
+
+      const hp  = calcHPStat(base.hp,  evs.hp);
+      let atk   = calcOtherStat(base.atk, evs.atk, natureName, "atk");
+      let def   = calcOtherStat(base.def, evs.def, natureName, "def");
+      let spa   = calcOtherStat(base.spa, evs.spa, natureName, "spa");
+      let spd   = calcOtherStat(base.spd, evs.spd, natureName, "spd");
+      let spe   = calcOtherStat(base.spe, evs.spe, natureName, "spe");
+
+      const multPhys = getItemOffensiveMultipliers(itemId, { category: "Physical" });
+      const multSpec = getItemOffensiveMultipliers(itemId, { category: "Special" });
+
+      atk = Math.floor(atk * multPhys.atk);
+      spa = Math.floor(spa * multSpec.spa);
+      spe = Math.floor(spe * Math.max(multPhys.spe, multSpec.spe));
+
+      return { name: pData.name, types: pData.types, maxHP: hp, hp, atk, def, spa, spd, spe, base: pData };
+    }
+
+    const playerPokemonEl = document.getElementById("playerPokemon");
+    const playerNatureEl  = document.getElementById("playerNature");
+    const playerItemEl    = document.getElementById("playerItem");
+    const playerMoveEl    = document.getElementById("playerMove");
+
+    const evInputs = {
+      hp: document.getElementById("evHP"),
+      atk: document.getElementById("evAtk"),
+      def: document.getElementById("evDef"),
+      spa: document.getElementById("evSpA"),
+      spd: document.getElementById("evSpD"),
+      spe: document.getElementById("evSpe")
+    };
+    const evVals = {
+      hp: document.getElementById("evHPVal"),
+      atk: document.getElementById("evAtkVal"),
+      def: document.getElementById("evDefVal"),
+      spa: document.getElementById("evSpAVal"),
+      spd: document.getElementById("evSpDVal"),
+      spe: document.getElementById("evSpeVal")
+    };
+    const evTotalNoteEl = document.getElementById("evTotalNote");
+
+    const itemInfoEl      = document.getElementById("itemInfo");
+    const playerSummaryEl = document.getElementById("playerSummary");
+    const opponentSummaryEl = document.getElementById("opponentSummary");
+    const playerStatsBody = document.getElementById("playerStatsBody");
+    const opponentStatsBody = document.getElementById("opponentStatsBody");
+    const playerMovesTableBody = document.getElementById("playerMovesTableBody");
+    const speedComparisonNoteEl = document.getElementById("speedComparisonNote");
+
+    const simulateBtn   = document.getElementById("simulateBtn");
+    const logEl         = document.getElementById("battleLogBox");
+    const gauntletInfoEl = document.getElementById("gauntletInfo");
+    const progressMagearnaEl = document.getElementById("progressMagearna");
+    const progressLandoEl = document.getElementById("progressLando");
+    const checkMagearnaEl = document.getElementById("checkMagearna");
+    const checkLandoEl = document.getElementById("checkLando");
+    const subMagearnaEl = document.getElementById("subMagearna");
+    const subLandoEl = document.getElementById("subLando");
+
+    const shareBtn = document.getElementById("shareBtn");
+    const shareNoteEl = document.getElementById("shareNote");
+
+
+    const playerSpriteEl   = document.getElementById("playerSprite");
+    const opponentSpriteEl = document.getElementById("opponentSprite");
+
+    const playerHPFillEl = document.getElementById("playerHPFill");
+    const opponentHPFillEl = document.getElementById("opponentHPFill");
+    const playerHPTextEl = document.getElementById("playerHPText");
+    const opponentHPTextEl = document.getElementById("opponentHPText");
+    const playerHPNameEl = document.getElementById("playerHPName");
+    const opponentHPNameEl = document.getElementById("opponentHPName");
+
+    // Persisted progress (localStorage)
+    const STORAGE_KEY = "gauntlet_progress_v1";
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { attemptsMagearna: 0, attemptsLando: 0, firstWinMagearna: null, firstWinLando: null };
+        const data = JSON.parse(raw);
+        return {
+          attemptsMagearna: Number.isFinite(data.attemptsMagearna) ? data.attemptsMagearna : 0,
+          attemptsLando: Number.isFinite(data.attemptsLando) ? data.attemptsLando : 0,
+          firstWinMagearna: (data.firstWinMagearna === null || Number.isFinite(data.firstWinMagearna)) ? data.firstWinMagearna : null,
+          firstWinLando: (data.firstWinLando === null || Number.isFinite(data.firstWinLando)) ? data.firstWinLando : null
+        };
+      } catch {
+        return { attemptsMagearna: 0, attemptsLando: 0, firstWinMagearna: null, firstWinLando: null };
+      }
+    }
+
+    function saveProgress() {
+      const payload = { attemptsMagearna, attemptsLando, firstWinMagearna, firstWinLando };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    let { attemptsMagearna, attemptsLando, firstWinMagearna, firstWinLando } = loadProgress();
+
+    function updateGauntletInfo() {
+      const magearnaCleared = firstWinMagearna !== null;
+      const landoCleared = firstWinLando !== null;
+
+      // Magearna card
+      progressMagearnaEl.classList.toggle("progress-done", magearnaCleared);
+      progressMagearnaEl.classList.toggle("progress-pending", !magearnaCleared);
+      checkMagearnaEl.textContent = magearnaCleared ? "✅" : "⬜";
+      subMagearnaEl.textContent = magearnaCleared
+        ? `Cleared on attempt #${firstWinMagearna}.`
+        : `Attempts so far: ${attemptsMagearna}.`;
+
+      // Lando card
+      progressLandoEl.classList.toggle("progress-done", landoCleared);
+      progressLandoEl.classList.toggle("progress-pending", !landoCleared);
+      checkLandoEl.textContent = landoCleared ? "✅" : "⬜";
+      subLandoEl.textContent = landoCleared
+        ? `Cleared on attempt #${firstWinLando}.`
+        : `Attempts so far: ${attemptsLando}.`;
+
+      if (magearnaCleared && landoCleared) {
+        gauntletInfoEl.textContent = '✅ Gauntlet complete! Please click "SHARE RESULTS" and share the copied picture with Kevin.';
+        shareBtn.disabled = false;
+      } else if (magearnaCleared && !landoCleared) {
+        gauntletInfoEl.textContent = "Magearna cleared. Now switch to Landorus‑Therian and clear that gauntlet too!";
+        shareBtn.disabled = true;
+      } else if (!magearnaCleared && landoCleared) {
+        gauntletInfoEl.textContent = "Landorus‑Therian cleared. Now switch to Magearna and clear that gauntlet too!";
+        shareBtn.disabled = true;
+      } else {
+        gauntletInfoEl.textContent = "You must clear BOTH gauntlets: win once as Magearna and once as Landorus‑Therian.";
+        shareBtn.disabled = true;
+      }
+    }
+
+    function populateItemDropdown() {
+      playerItemEl.innerHTML = "";
+      items.forEach(it => {
+        const opt = document.createElement("option");
+        opt.value = it.id;
+        opt.textContent = it.name;
+        playerItemEl.appendChild(opt);
+      });
+      updateItemInfo();
+    }
+
+    function updateItemInfo() {
+      const itemId = playerItemEl.value;
+      const item   = items.find(i => i.id === itemId);
+      itemInfoEl.textContent = item ? item.description : "";
+    }
+
+    function populateNatureDropdown() {
+      const pokemonId = playerPokemonEl.value;
+      const options = natureOptionsFor(pokemonId);
+      playerNatureEl.innerHTML = "";
+      const statNamesLong = {
+        atk: "Attack",
+        def: "Defense",
+        spa: "Special Attack",
+        spd: "Special Defense",
+        spe: "Speed"
+      };
+      options.forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n;
+        const nat = natures[n];
+        const plusStat = statNamesLong[nat.plus] || nat.plus;
+        const minusStat = statNamesLong[nat.minus] || nat.minus;
+        opt.textContent = `${n} (+10% ${plusStat}, -10% ${minusStat})`;
+        playerNatureEl.appendChild(opt);
+      });
+    }
+
+    function populateMoveDropdownAndTable() {
+      const pokemonId = playerPokemonEl.value;
+      const pData = pokemonData[pokemonId];
+      playerMoveEl.innerHTML = "";
+      playerMovesTableBody.innerHTML = "";
+
+      pData.moves.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = m.name;
+        playerMoveEl.appendChild(opt);
+
+        const tr = document.createElement("tr");
+        const stab = pData.types.includes(m.type) ? "Yes" : "No";
+        tr.innerHTML =
+          `<td>${m.name}</td><td>${m.type}</td><td>${m.category}</td><td>${m.power}</td><td>${stab}</td>`;
+        playerMovesTableBody.appendChild(tr);
+      });
+    }
+
+    function getEVInputs() {
+      return {
+        hp:  +evInputs.hp.value  || 0,
+        atk: +evInputs.atk.value || 0,
+        def: +evInputs.def.value || 0,
+        spa: +evInputs.spa.value || 0,
+        spd: +evInputs.spd.value || 0,
+        spe: +evInputs.spe.value || 0
+      };
+    }
+
+    function updateEVLabelsAndNote() {
+      const ev = getEVInputs();
+      evVals.hp.textContent  = ev.hp;
+      evVals.atk.textContent = ev.atk;
+      evVals.def.textContent = ev.def;
+      evVals.spa.textContent = ev.spa;
+      evVals.spd.textContent = ev.spd;
+      evVals.spe.textContent = ev.spe;
+
+      const total = ev.hp + ev.atk + ev.def + ev.spa + ev.spd + ev.spe;
+      evTotalNoteEl.textContent = `Total EVs: ${total} (recommended to max out 2 stats).`;
+      evTotalNoteEl.classList.toggle("highlight", total > 508);
+    }
+
+    function renderStatsTable(tbodyEl, stats) {
+      tbodyEl.innerHTML = "";
+      const entries = [
+        ["HP", stats.hp],
+        ["Attack", stats.atk],
+        ["Defense", stats.def],
+        ["Special Attack", stats.spa],
+        ["Special Defense", stats.spd],
+        ["Speed", stats.spe]
+      ];
+      for (const [label, val] of entries) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${label}</td><td>${val}</td>`;
+        tbodyEl.appendChild(tr);
+      }
+    }
+
+    function getOpponentDataForCurrentPlayer() {
+      const playerId = playerPokemonEl.value;
+      const opponentId = (playerId === "magearna") ? "landorus-t" : "magearna";
+      return { opponentId, preset: opponentPresets[opponentId] };
+    }
+
+    function updateSprites(playerId, opponentId) {
+      playerSpriteEl.src = spritePaths[playerId];
+      playerSpriteEl.alt = pokemonData[playerId].name;
+      opponentSpriteEl.src = spritePaths[opponentId];
+      opponentSpriteEl.alt = pokemonData[opponentId].name;
+    }
+
+    function setHPColor(fillEl, ratio) {
+      if (ratio > 0.5) fillEl.style.background = "#22c55e";
+      else if (ratio > 0.2) fillEl.style.background = "#eab308";
+      else fillEl.style.background = "#ef4444";
+    }
+
+    function updateHPUI(player, opponent, immediate=false) {
+      const pRatio = player.maxHP > 0 ? player.hp / player.maxHP : 0;
+      const oRatio = opponent.maxHP > 0 ? opponent.hp / opponent.maxHP : 0;
+
+      setHPColor(playerHPFillEl, pRatio);
+      setHPColor(opponentHPFillEl, oRatio);
+
+      playerHPFillEl.style.transition = immediate ? "none" : "width 0.6s ease";
+      opponentHPFillEl.style.transition = immediate ? "none" : "width 0.6s ease";
+
+      playerHPFillEl.style.width = `${Math.max(0, Math.min(1, pRatio))*100}%`;
+      opponentHPFillEl.style.width = `${Math.max(0, Math.min(1, oRatio))*100}%`;
+
+      playerHPTextEl.textContent = `${player.hp} / ${player.maxHP} HP`;
+      opponentHPTextEl.textContent = `${opponent.hp} / ${opponent.maxHP} HP`;
+    }
+
+    function updateLivePanels() {
+      updateEVLabelsAndNote();
+
+      const playerId = playerPokemonEl.value;
+      const ev = getEVInputs();
+      const playerStats = buildStatsFor(playerId, playerNatureEl.value, ev, playerItemEl.value);
+
+      const { opponentId, preset } = getOpponentDataForCurrentPlayer();
+      const opponentStats = buildStatsFor(opponentId, preset.nature, preset.evs, preset.itemId);
+
+      updateSprites(playerId, opponentId);
+
+      const itemName = (items.find(i => i.id === playerItemEl.value) || {}).name || "None";
+      playerSummaryEl.textContent =
+        `${playerStats.name} (${playerStats.types.join(" / ")}) – Nature: ${playerNatureEl.value}, Item: ${itemName}`;
+      opponentSummaryEl.textContent =
+        `${opponentStats.name} (${opponentStats.types.join(" / ")}) – Fixed gauntlet build.`;
+
+      renderStatsTable(playerStatsBody, playerStats);
+      renderStatsTable(opponentStatsBody, opponentStats);
+
+      playerHPNameEl.textContent = `Your ${playerStats.name}`;
+      opponentHPNameEl.textContent = `Opponent ${opponentStats.name}`;
+      updateHPUI(playerStats, opponentStats, true);
+
+      playerSpriteEl.classList.toggle("fainted", playerStats.hp <= 0);
+      opponentSpriteEl.classList.toggle("fainted", opponentStats.hp <= 0);
+
+      const whoFirst =
+        playerStats.spe > opponentStats.spe ? "You" :
+        playerStats.spe < opponentStats.spe ? "Opponent" :
+        "Speed tie (you move first here)";
+      speedComparisonNoteEl.textContent =
+        `Your Speed: ${playerStats.spe} | Opponent Speed: ${opponentStats.spe} → ${whoFirst} will move first in this battle.`;
+    }
+
+    function getMoveByIdForPokemon(pokemonId, moveId, isOpponent=false) {
+      const pData = pokemonData[pokemonId];
+      const arr = isOpponent ? pData.opponentMoves : pData.moves;
+      return arr.find(m => m.id === moveId);
+    }
+
+    function applyDefensiveItems(defender, move, defenderItemId, originalDamage) {
+      let damage = originalDamage;
+      const defEff = getItemDefensiveEffects(defenderItemId);
+
+      if (defEff.berryType) {
+        const isSE = getTypeEffectiveness(move.type, defender.types) > 1;
+        if (isSE && move.type === defEff.berryType) damage = Math.floor(damage / 2);
+      }
+
+      if (defEff.focusSash && defender.hp === defender.maxHP && damage >= defender.hp) {
+        damage = defender.hp - 1;
+      }
+      return damage;
+    }
+
+    function triggerAttackAnimation(isOpponentAttack) {
+      const attackerSprite = isOpponentAttack ? opponentSpriteEl : playerSpriteEl;
+      const defenderSprite = isOpponentAttack ? playerSpriteEl : opponentSpriteEl;
+
+      attackerSprite.classList.remove("sprite-attack-left", "sprite-attack-right");
+      defenderSprite.classList.remove("hit-flash");
+      void attackerSprite.offsetWidth;
+
+      attackerSprite.classList.add(isOpponentAttack ? "sprite-attack-right" : "sprite-attack-left");
+      defenderSprite.classList.add("hit-flash");
+    }
+
+    function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+
+    async function runSimulation() {
+      simulateBtn.disabled = true;
+
+      const playerId = playerPokemonEl.value;
+      if (playerId === "magearna") attemptsMagearna++;
+      else attemptsLando++;
+      saveProgress();
+
+      const player = buildStatsFor(playerId, playerNatureEl.value, getEVInputs(), playerItemEl.value);
+
+      const { opponentId, preset } = getOpponentDataForCurrentPlayer();
+      const opponent = buildStatsFor(opponentId, preset.nature, preset.evs, preset.itemId);
+
+      const playerMove = getMoveByIdForPokemon(playerId, playerMoveEl.value, false);
+      const opponentMove = getMoveByIdForPokemon(opponentId, preset.willUseMoveId, true);
+
+      updateHPUI(player, opponent, true);
+      playerSpriteEl.classList.remove("fainted");
+      opponentSpriteEl.classList.remove("fainted");
+
+      const playerFirst = player.spe >= opponent.spe;
+
+      let log = "";
+
+      async function attack(attacker, defender, move, attackerItemId, defenderItemId, attackerLabel, defenderLabel) {
+        let { damage, typeMult } = calcDamage({
+          level: LEVEL,
+          attacker, defender, move, attackerItemId
+        });
+
+        damage = applyDefensiveItems(defender, move, defenderItemId, damage);
+
+        const isOpp = attackerLabel.startsWith("Opponent");
+        const shownMoveName = isOpp ? '"HIDDEN"' : move.name;
+
+        triggerAttackAnimation(isOpp);
+        await sleep(120);
+
+        defender.hp = Math.max(0, defender.hp - damage);
+        updateHPUI(player, opponent);
+
+        log += `${attackerLabel} ${attacker.name} used ${shownMoveName}!
+`;
+
+        if (!isOpp) {
+          if (typeMult === 0) log += `It had no effect...
+`;
+          else {
+            if (typeMult > 1) log += `It's super effective!
+`;
+            if (typeMult < 1) log += `It's not very effective...
+`;
+          }
+        }
+
+        log += `${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).
+`;
+        if (defender.hp <= 0) log += `${defenderLabel} ${defender.name} fainted!
+`;
+
+        logEl.textContent = log;
+        await sleep(650);
+      }
+
+      if (playerFirst) {
+        await attack(player, opponent, playerMove, playerItemEl.value, preset.itemId, "Your", "Opponent's");
+        if (opponent.hp > 0) {
+          await attack(opponent, player, opponentMove, preset.itemId, playerItemEl.value, "Opponent's", "Your");
+        }
+      } else {
+        await attack(opponent, player, opponentMove, preset.itemId, playerItemEl.value, "Opponent's", "Your");
+        if (player.hp > 0) {
+          await attack(player, opponent, playerMove, playerItemEl.value, preset.itemId, "Your", "Opponent's");
+        }
+      }
+
+      playerSpriteEl.classList.toggle("fainted", player.hp <= 0);
+      opponentSpriteEl.classList.toggle("fainted", opponent.hp <= 0);
+
+      log += "\n=== Outcome ===\n";
+      let playerWin = false;
+
+      if (opponent.hp <= 0 && player.hp > 0) {
+        log += "You WIN this battle! The opposing Pokémon was KO'd.\n";
+        playerWin = true;
+      } else if (player.hp <= 0 && opponent.hp > 0) {
+        log += "You LOSE. Your Pokémon fainted.\n";
+      } else if (player.hp <= 0 && opponent.hp <= 0) {
+        log += "It's a DRAW. Both Pokémon fainted.\n";
+      } else {
+        log += "Both Pokémon are still standing after this round.\n";
+      }
+
+      logEl.textContent = log;
+
+      if (playerWin) {
+        if (playerId === "magearna" && firstWinMagearna === null) firstWinMagearna = attemptsMagearna;
+        if (playerId === "landorus-t" && firstWinLando === null) firstWinLando = attemptsLando;
+        saveProgress();
+      }
+
+      updateGauntletInfo();
+
+      simulateBtn.disabled = false;
+    }
+
+    function setDefaultEVsForPokemon() {
+      evInputs.hp.value = 0;
+      evInputs.atk.value = 0;
+      evInputs.def.value = 0;
+      evInputs.spa.value = 0;
+      evInputs.spd.value = 0;
+      evInputs.spe.value = 0;
+      updateEVLabelsAndNote();
+    }
+
+    function onPlayerPokemonChange() {
+      populateNatureDropdown();
+      populateMoveDropdownAndTable();
+      setDefaultEVsForPokemon();
+      updateLivePanels();
+    }
+
+    playerPokemonEl.addEventListener("change", onPlayerPokemonChange);
+    playerNatureEl.addEventListener("change", updateLivePanels);
+    playerItemEl.addEventListener("change", () => {
+      updateItemInfo();
+      updateLivePanels();
+    });
+    playerMoveEl.addEventListener("change", updateLivePanels);
+    Object.values(evInputs).forEach(inp => inp.addEventListener("input", updateLivePanels));
+
+    simulateBtn.addEventListener("click", runSimulation);
+
+    async function generateShareImageBlob() {
+      const width = 700, height = 380;
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      // background
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(0,0,width,height);
+
+      // border
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10,10,width-20,height-20);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 28px Arial";
+      ctx.fillText("Magearna & Landorus‑Therian Gauntlet", 40, 60);
+
+      ctx.font = "bold 22px Arial";
+      ctx.fillStyle = "#16a34a";
+      ctx.fillText("COMPLETED ✅", 40, 105);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "20px Arial";
+      ctx.fillText(`Magearna cleared on attempt #${firstWinMagearna}`, 40, 160);
+      ctx.fillText(`Landorus‑Therian cleared on attempt #${firstWinLando}`, 40, 200);
+
+      ctx.font = "18px Arial";
+      ctx.fillStyle = "#334155";
+      ctx.fillText("Send this screenshot to Kevin on Discord.", 40, 260);
+
+      // timestamp (not super helpful for cheating but nice)
+      const ts = new Date().toLocaleString();
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#64748b";
+      ctx.fillText(ts, 40, 320);
+
+      return await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    }
+
+    shareBtn.addEventListener("click", async () => {
+      if (firstWinMagearna === null || firstWinLando === null) return;
+      shareNoteEl.textContent = "";
+      try {
+        const blob = await generateShareImageBlob();
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+          shareNoteEl.textContent = "Copied an image to your clipboard!";
+        } else {
+          // fallback: download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "gauntlet-result.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          shareNoteEl.textContent = "Your browser can't copy images directly, so a download started instead.";
+        }
+      } catch (e) {
+        shareNoteEl.textContent = "Could not copy image. Try a different browser (Chrome/Edge works best).";
+      }
+    });
+
+    (function init() {
+      populateItemDropdown();
+      playerItemEl.value = "choicespecs";   // default item
+      updateItemInfo();
+      populateNatureDropdown();
+      populateMoveDropdownAndTable();
+      setDefaultEVsForPokemon();
+      updateLivePanels();
+      updateGauntletInfo();
+    })();
+  </script>
+</body>
+</html>
