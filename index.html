@@ -55,7 +55,6 @@
     .note { font-size: 0.85rem; color: #555; }
     .highlight { font-weight: bold; color: #006600; }
 
-    /* Bigger hints */
     .hints {
       font-size: 1rem;
       font-weight: bold;
@@ -63,7 +62,6 @@
     }
     .hints ul { margin: 0.4rem 0 0 1.2rem; }
 
-    /* Battlefield + sprites */
     .battlefield {
       display: flex;
       justify-content: space-between;
@@ -91,19 +89,21 @@
     .sprite-left { transform: scaleX(-1); }
     .sprite-right { transform: scaleX(1); }
 
-    /* Attack animations */
+    /* UPDATED: bigger lunge forward */
     @keyframes attackLeft {
       0%   { transform: scaleX(-1) translateX(0); }
-      50%  { transform: scaleX(-1) translateX(30px); }
+      40%  { transform: scaleX(-1) translateX(70px); }
+      70%  { transform: scaleX(-1) translateX(70px); }
       100% { transform: scaleX(-1) translateX(0); }
     }
     @keyframes attackRight {
       0%   { transform: scaleX(1) translateX(0); }
-      50%  { transform: scaleX(1) translateX(-30px); }
+      40%  { transform: scaleX(1) translateX(-70px); }
+      70%  { transform: scaleX(1) translateX(-70px); }
       100% { transform: scaleX(1) translateX(0); }
     }
-    .sprite-attack-left  { animation: attackLeft 0.35s ease-out; }
-    .sprite-attack-right { animation: attackRight 0.35s ease-out; }
+    .sprite-attack-left  { animation: attackLeft 0.5s ease-out; }
+    .sprite-attack-right { animation: attackRight 0.5s ease-out; }
 
     @keyframes hitFlash {
       0%   { filter: brightness(1); }
@@ -112,12 +112,21 @@
     }
     .hit-flash { animation: hitFlash 0.25s ease-out; }
 
+    /* NEW: defender shake on impact */
+    @keyframes defenderShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-6px); }
+      100% { transform: translateX(0); }
+    }
+    .defender-shake { animation: defenderShake 0.35s ease-out; }
+
     .fainted {
       filter: grayscale(1) brightness(0.6);
       opacity: 0.55;
     }
 
-    /* Simple health bars */
     .hpbox {
       width: 100%;
       max-width: 260px;
@@ -166,7 +175,6 @@
       cursor: not-allowed;
     }
 
-    /* Progress tracker */
     .progress-wrap {
       display: flex;
       gap: 1rem;
@@ -198,7 +206,6 @@
     .progress-done .progress-check { color: #16a34a; }
     .progress-pending .progress-check { color: #9ca3af; }
 
-    /* Battlefield log in the middle */
     .battle-log-box {
       position: absolute;
       left: 50%;
@@ -214,7 +221,6 @@
       font-size: 0.9rem;
       white-space: pre-wrap;
       font-family: "Consolas", monospace;
-      pointer-events: none;
       max-height: 180px;
       overflow-y: auto;
     }
@@ -236,7 +242,6 @@
       border-radius: 10px;
     }
 
-    /* EV cap pulse */
     @keyframes pulseGreen {
       0% { transform: scale(1); }
       50% { transform: scale(1.06); }
@@ -266,21 +271,18 @@
 
   <div class="card">
     <h2>How to Play</h2>
-
     <p class="note" style="font-size:1rem;">
       <strong>Landorus-Therian</strong> and <strong>Magearna</strong> are two of the most-used Pokémon in competitive Sun &amp; Moon OU, and each can defeat the other depending on how they’re built.
       In this gauntlet, your goal is to play <strong>both matchups</strong> and win them both by <strong>fainting the opponent within 1 turn</strong>.
       Please read the steps below before you start (there is no time limit).
     </p>
-
     <ol>
       <li><strong>Choose your Pokémon</strong> (the other becomes the opponent).</li>
       <li><strong>Set your build:</strong> pick a Nature, choose a Held Item, then assign your EVs.</li>
       <li><strong>Check your stats and the opponent's</strong> (your stats gets updated as you change your build).</li>
-      <li><strong>When you’re ready to attempt, pick your move</strong> and click <strong>SIMULATE BATTLE</strong>.</li>
-      <li><strong>If you win, switch to the other Pokémon and clear that matchup too.</strong> Your progress tracker is at the <strong>very bottom</strong> of the page.</li>
+      <li><strong>When you’re done building, pick your move</strong> and click <strong>Simulate Battle</strong>.</li>
+      <li><strong>If you win, switch to the other Pokémon and clear that matchup too.</strong> Your progress tracker is at the <strong>bottom</strong> of the page.</li>
     </ol>
-
     <p class="note" style="font-size:0.95rem;">
       Each attempt comes with a battle log—learn from it and make appropriate changes. Have fun!
     </p>
@@ -313,7 +315,7 @@
         <li>Higher Speed Pokémon moves first.</li>
         <li>Landorus-T uses its <strong>Attack</strong> stat (mitigated by <strong>Defense</strong> stat).</li>
         <li>Magearna uses its <strong>Special Attack</strong> stat (mitigated by <strong>Special Defense</strong> stat).</li>
-        <li>There are multiple ways to win these 2 matchups — a good approach is to win one aggressively and the other defensively.</li>
+        <li>There are multiple ways to win these 2 matchups — explore the options!</li>
       </ul>
     </p>
 
@@ -454,7 +456,6 @@
           { id: "icebeam",      name: "Ice Beam",      type: "Ice",     category: "Special", power: 90 },
           { id: "thunderbolt",  name: "Thunderbolt",   type: "Electric",category: "Special", power: 90 },
           { id: "flashcannon",  name: "Flash Cannon",  type: "Steel",   category: "Special", power: 80 },
-          // Z-move (selectable only if Steelium Z)
           { id: "corkscrewcrash", name: "Corkscrew Crash", type: "Steel", category: "Special", power: 160, zMoveOf: "flashcannon" }
         ],
         opponentMoves: [
@@ -484,7 +485,6 @@
       }
     };
 
-    // Added neutral nature Docile
     const natures = {
       "Docile":  { plus: null, minus: null },
       "Jolly":   { plus: "spe", minus: "spa" },
@@ -501,26 +501,23 @@
         : ["Docile", "Jolly", "Adamant", "Careful"];
     }
 
-    // === ITEM POOLS SPLIT BY ALLY POKEMON ===
     const itemsByPokemon = {
       "magearna": [
-        { id: "choicescarf",   name: "Choice Scarf",   description: "Boosts Speed by 50%.", effect: { speedMultiplier: 1.5 } },
-        { id: "expertbelt",    name: "Expert Belt",   description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
-        { id: "lifeorb_DISABLED", name: "Life Orb", description: "REMOVED", effect: {} }, // placeholder (not shown)
-        { id: "pixieplate",    name: "Pixie Plate",   description: "Boosts Fairy-type moves (about 20%).", effect: { typeBoost: { type: "Fairy", multiplier: 1.2 } } },
-        { id: "steeliumz",     name: "Steelium Z",    description: "Enables Corkscrew Crash (Z-Flash Cannon).", effect: { steeliumZ: true } },
-        { id: "shucaberry",    name: "Shuca Berry",   description: "Halves damage from one super-effective Ground-type move.", effect: { berryType: "Ground" } },
-        { id: "yacheberry_DISABLED", name: "Yache Berry", description: "REMOVED", effect: {} }, // removed from Magearna
-      ].filter(x => !x.id.endsWith("_DISABLED")),
+        { id: "none",         name: "None",          description: "No Held Item.", effect: {} },
+        { id: "choicescarf",  name: "Choice Scarf",  description: "Boosts Speed by 50%.", effect: { speedMultiplier: 1.5 } },
+        { id: "expertbelt",   name: "Expert Belt",  description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
+        { id: "pixieplate",   name: "Pixie Plate",   description: "Boosts Fairy-type moves (about 20%).", effect: { typeBoost: { type: "Fairy", multiplier: 1.2 } } },
+        { id: "steeliumz",    name: "Steelium Z",    description: "Enables Corkscrew Crash (Z-Flash Cannon).", effect: { steeliumZ: true } },
+        { id: "shucaberry",   name: "Shuca Berry",   description: "Halves damage from one super-effective Ground-type move.", effect: { berryType: "Ground" } }
+      ],
       "landorus-t": [
-        { id: "choiceband",    name: "Choice Band",   description: "Boosts Attack by 50%.", effect: { attackMultiplier: 1.5 } },
-        { id: "choicescarf_DISABLED", name: "Choice Scarf", description: "REMOVED", effect: {} }, // scarf removed for ally Lando
-        { id: "expertbelt",    name: "Expert Belt",   description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
-        { id: "focussash",     name: "Focus Sash",    description: "If at full HP, survives a would-be KO with 1 HP.", effect: { focusSash: true } }
-      ].filter(x => !x.id.endsWith("_DISABLED"))
+        { id: "none",         name: "None",         description: "No Held Item.", effect: {} },
+        { id: "choiceband",   name: "Choice Band",  description: "Boosts Attack by 50%.", effect: { attackMultiplier: 1.5 } },
+        { id: "expertbelt",   name: "Expert Belt",  description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
+        { id: "focussash",    name: "Focus Sash",   description: "If at full HP, survives a would-be KO with 1 HP.", effect: { focusSash: true } }
+      ]
     };
 
-    // Opponent fixed builds
     const opponentPresets = {
       "magearna": {
         nature: "Timid",
@@ -530,7 +527,7 @@
       },
       "landorus-t": {
         nature: "Adamant",
-        evs: { hp: 144, atk: 252, def: 0, spa: 0, spd: 0, spe: 0 }, // per latest
+        evs: { hp: 144, atk: 252, def: 0, spa: 0, spd: 0, spe: 0 },
         itemId: "yacheberry",
         willUseMoveId: "earthquake"
       }
@@ -579,8 +576,9 @@
     }
 
     function getItemOffensiveMultipliers(itemId, move, pokemonId) {
-      // look in both ally pools + opponent pools
-      const pool = [...itemsByPokemon["magearna"], ...itemsByPokemon["landorus-t"],
+      const pool = [
+        ...itemsByPokemon["magearna"],
+        ...itemsByPokemon["landorus-t"],
         { id:"yacheberry", effect:{ berryType:"Ice" } },
         { id:"choicescarf", effect:{ speedMultiplier:1.5 } }
       ];
@@ -597,7 +595,9 @@
       };
     }
     function getItemDefensiveEffects(itemId) {
-      const pool = [...itemsByPokemon["magearna"], ...itemsByPokemon["landorus-t"],
+      const pool = [
+        ...itemsByPokemon["magearna"],
+        ...itemsByPokemon["landorus-t"],
         { id:"yacheberry", effect:{ berryType:"Ice" } }
       ];
       const item = pool.find(i => i.id === itemId);
@@ -624,7 +624,7 @@
 
       const stab = attacker.types.includes(move.type) ? 1.5 : 1.0;
       const typeMult = getTypeEffectiveness(move.type, defender.types) || 1;
-      const randomFactor = 0.925; // average roll
+      const randomFactor = 0.925;
 
       let typeBoostMult = 1;
       if (itemMults.typeBoost && itemMults.typeBoost.type === move.type) {
@@ -652,7 +652,6 @@
       let spd   = calcOtherStat(base.spd, evs.spd, natureName, "spd");
       let spe   = calcOtherStat(base.spe, evs.spe, natureName, "spe");
 
-      // apply item stat boosts (no move lock!)
       const multPhys = getItemOffensiveMultipliers(itemId, { category: "Physical" }, pokemonId);
       const multSpec = getItemOffensiveMultipliers(itemId, { category: "Special" }, pokemonId);
 
@@ -839,7 +838,6 @@
       const itemId = playerItemEl.value;
 
       pData.moves.forEach(m => {
-        // Z-move only selectable with Steelium Z
         if (m.zMoveOf && itemId !== "steeliumz") return;
 
         const opt = document.createElement("option");
@@ -865,14 +863,12 @@
       };
     }
 
-    // EV cap logic (510 spend)
     const EV_CAP = 510;
     function enforceEvCap(changedKey) {
       const ev = getEVInputs();
       const total = ev.hp + ev.atk + ev.def + ev.spa + ev.spd + ev.spe;
       if (total <= EV_CAP) return false;
 
-      // clamp only the changed slider back
       const over = total - EV_CAP;
       const inp = evInputs[changedKey];
       const currentVal = +inp.value;
@@ -936,21 +932,41 @@
       else fillEl.style.background = "#ef4444";
     }
 
-    function updateHPUI(player, opponent, immediate=false) {
+    function updateHPUI(player, opponent, immediate=false, durationMs=null) {
       const pRatio = player.maxHP > 0 ? player.hp / player.maxHP : 0;
       const oRatio = opponent.maxHP > 0 ? opponent.hp / opponent.maxHP : 0;
 
       setHPColor(playerHPFillEl, pRatio);
       setHPColor(opponentHPFillEl, oRatio);
 
-      playerHPFillEl.style.transition = immediate ? "none" : "width 0.6s ease";
-      opponentHPFillEl.style.transition = immediate ? "none" : "width 0.6s ease";
+      const dur = immediate ? 0 : (durationMs ?? 600);
+      playerHPFillEl.style.transition = immediate ? "none" : `width ${dur}ms ease`;
+      opponentHPFillEl.style.transition = immediate ? "none" : `width ${dur}ms ease`;
 
       playerHPFillEl.style.width = `${Math.max(0, Math.min(1, pRatio))*100}%`;
       opponentHPFillEl.style.width = `${Math.max(0, Math.min(1, oRatio))*100}%`;
 
-      playerHPTextEl.textContent = `${player.hp} / ${player.maxHP} HP`;
-      opponentHPTextEl.textContent = `${opponent.hp} / ${opponent.maxHP} HP`;
+      if (immediate) {
+        playerHPTextEl.textContent = `${player.hp} / ${player.maxHP} HP`;
+        opponentHPTextEl.textContent = `${opponent.hp} / ${opponent.maxHP} HP`;
+      }
+    }
+
+    function animateHPText(textEl, startHP, endHP, maxHP, durationMs) {
+      if (durationMs <= 0 || startHP === endHP) {
+        textEl.textContent = `${endHP} / ${maxHP} HP`;
+        return;
+      }
+      const startTime = performance.now();
+      const delta = endHP - startHP;
+
+      function step(now) {
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const current = Math.round(startHP + delta * t);
+        textEl.textContent = `${current} / ${maxHP} HP`;
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
     }
 
     function updateLivePanels() {
@@ -996,45 +1012,42 @@
       return arr.find(m => m.id === moveId);
     }
 
-    function applyDefensiveItems(defender, move, defenderItemId, originalDamage, attackerLabel, defenderLabel) {
+    function applyDefensiveItems(defender, move, defenderItemId, originalDamage) {
       let damage = originalDamage;
       const defEff = getItemDefensiveEffects(defenderItemId);
+      const info = { yacheTriggered: false, focusSashTriggered: false };
 
       if (defEff.berryType) {
         const isSE = getTypeEffectiveness(move.type, defender.types) > 1;
         if (isSE && move.type === defEff.berryType) {
-          const before = damage;
           damage = Math.floor(damage / 2);
-
-          // Special revealed Yache message vs Ice Beam
           if (defender.id === "landorus-t" && move.id === "icebeam") {
-            logEl.textContent += `It's super effective!\n`;
-            logEl.textContent += `(Landorus-Therian ate its Yache Berry!)\n`;
-            logEl.textContent += `The Yache Berry weakened the damage to Landorus-Therian!\n`;
+            info.yacheTriggered = true;
           }
         }
       }
 
       if (defEff.focusSash && defender.hp === defender.maxHP && damage >= defender.hp) {
         damage = defender.hp - 1;
-        if (defender.id === "landorus-t" && defenderLabel.startsWith("Your")) {
-          logEl.textContent += `Landorus-Therian hung on using its Focus Sash!\n`;
+        if (defender.id === "landorus-t") {
+          info.focusSashTriggered = true;
         }
       }
 
-      return damage;
+      return { damage, info };
     }
 
+    /* UPDATED: attacker lunge + defender flash + shake */
     function triggerAttackAnimation(isOpponentAttack) {
       const attackerSprite = isOpponentAttack ? opponentSpriteEl : playerSpriteEl;
       const defenderSprite = isOpponentAttack ? playerSpriteEl : opponentSpriteEl;
 
       attackerSprite.classList.remove("sprite-attack-left", "sprite-attack-right");
-      defenderSprite.classList.remove("hit-flash");
-      void attackerSprite.offsetWidth;
+      defenderSprite.classList.remove("hit-flash", "defender-shake");
+      void attackerSprite.offsetWidth; // reflow so animation restarts
 
       attackerSprite.classList.add(isOpponentAttack ? "sprite-attack-right" : "sprite-attack-left");
-      defenderSprite.classList.add("hit-flash");
+      defenderSprite.classList.add("hit-flash", "defender-shake");
     }
 
     function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
@@ -1050,6 +1063,8 @@
         itemName: item ? item.name : playerItemEl.value
       };
     }
+
+    const HP_PER_SECOND = 75;
 
     async function runSimulation() {
       if (!isNameValid()) {
@@ -1078,37 +1093,93 @@
       opponentSpriteEl.classList.remove("fainted");
 
       const playerFirst = player.spe >= opponent.spe;
+
       let log = "";
+      logEl.textContent = "";
+      async function pushLog(lines, delayMs=2000) {
+        for (const line of lines) {
+          log += line + "\n";
+          logEl.textContent = log;
+          logEl.scrollTop = logEl.scrollHeight;
+          await sleep(delayMs);
+        }
+      }
 
       async function attack(attacker, defender, move, attackerItemId, defenderItemId, attackerLabel, defenderLabel) {
         let { damage, typeMult } = calcDamage({ level: LEVEL, attacker, defender, move, attackerItemId });
 
+        if (attacker.id === "magearna" && move.id === "thunderbolt" && defender.id === "landorus-t") {
+          damage = 0;
+          typeMult = 0;
+        }
+
         const isOpp = attackerLabel.startsWith("Opponent");
-        const shownMoveName = isOpp ? "Opponent's move" : move.name;
+        const shownMoveName = isOpp ? "<    >" : move.name;
 
         triggerAttackAnimation(isOpp);
         await sleep(120);
 
-        // apply defensive items (berries/sash)
-        damage = applyDefensiveItems(defender, move, defenderItemId, damage, attackerLabel, defenderLabel);
+        const applied = applyDefensiveItems(defender, move, defenderItemId, damage);
+        damage = applied.damage;
+        const info = applied.info;
 
+        // 1) show move-used line
+        await pushLog([`${attackerLabel} ${attacker.name} used ${shownMoveName} move!`]);
+
+        // 2) start HP drop immediately
+        const preHP = defender.hp;
         defender.hp = Math.max(0, defender.hp - damage);
-        updateHPUI(player, opponent);
+        const postHP = defender.hp;
+        const lost = preHP - postHP;
+        const durationMs = Math.max(250, (lost / HP_PER_SECOND) * 1000);
 
-        log += `${attackerLabel} ${attacker.name} used ${shownMoveName}!\n`;
+        updateHPUI(player, opponent, false, durationMs);
 
-        // Show effectiveness both ways
-        if (typeMult === 0) log += `It had no effect...\n`;
-        else {
-          if (typeMult > 1) log += `It's super effective!\n`;
-          if (typeMult < 1) log += `It's not very effective...\n`;
+        if (defenderLabel.startsWith("Your")) {
+          animateHPText(playerHPTextEl, preHP, postHP, defender.maxHP, durationMs);
+        } else {
+          animateHPText(opponentHPTextEl, preHP, postHP, defender.maxHP, durationMs);
         }
 
-        log += `${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).\n`;
-        if (defender.hp <= 0) log += `${defenderLabel} ${defender.name} fainted!\n`;
+        const animStart = performance.now();
 
-        logEl.textContent = log;
-        await sleep(650);
+        // 3) effectiveness/yache while bar is dropping
+        const midLines = [];
+        if (typeMult === 0) {
+          midLines.push(`It had no effect...`);
+        } else {
+          if (typeMult > 1) midLines.push(`It's super effective!`);
+          if (typeMult < 1) midLines.push(`It's not very effective...`);
+        }
+
+        if (info.yacheTriggered) {
+          midLines.push(`(Landorus-Therian ate its Yache Berry!)`);
+          midLines.push(`The Yache Berry weakened the damage to Landorus-Therian!`);
+        }
+
+        if (midLines.length) await pushLog(midLines);
+
+        // 4) wait for animation to finish
+        const elapsed = performance.now() - animStart;
+        const remaining = durationMs - elapsed;
+        if (remaining > 0) await sleep(remaining + 50);
+
+        // 5) after animation: damage + sash
+        const postLines = [];
+        postLines.push(`${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).`);
+
+        if (info.focusSashTriggered) {
+          postLines.push(`Landorus-Therian hung on using its Focus Sash!`);
+        }
+
+        await pushLog(postLines);
+
+        // 6) faint text + sprite darken together
+        if (defender.hp <= 0) {
+          const defenderSprite = defenderLabel.startsWith("Your") ? playerSpriteEl : opponentSpriteEl;
+          defenderSprite.classList.add("fainted");
+          await pushLog([`${defenderLabel} ${defender.name} fainted!`]);
+        }
       }
 
       if (playerFirst) {
@@ -1123,20 +1194,19 @@
         }
       }
 
+      // keep UI consistent after turn ends
       playerSpriteEl.classList.toggle("fainted", player.hp <= 0);
       opponentSpriteEl.classList.toggle("fainted", opponent.hp <= 0);
 
-      log += "\n=== Outcome ===\n";
-      let playerWin = false;
+      await pushLog(["", "=== Outcome ==="]);
 
+      let playerWin = false;
       if (opponent.hp <= 0 && player.hp > 0) {
-        log += "You WIN this battle! The opposing Pokémon was KO'd.\n";
+        await pushLog(["You WIN this battle! The opposing Pokémon was KO'd."]);
         playerWin = true;
       } else {
-        log += "You LOSE. You failed to faint the opponent within 1 turn.\n";
+        await pushLog(["You LOSE. You failed to faint the opponent within 1 turn."]);
       }
-
-      logEl.textContent = log;
 
       if (playerWin) {
         if (playerId === "magearna" && firstWinMagearna === null) {
@@ -1153,6 +1223,7 @@
 
       updateGauntletInfo();
       updateSimulateEnabled();
+      simulateBtn.disabled = !isNameValid();
     }
 
     function setDefaultEVsForPokemon() {
@@ -1170,8 +1241,8 @@
       playerNatureEl.value = "Docile";
 
       populateItemDropdown();
-      if (pokemonId === "magearna") playerItemEl.value = "choicescarf";
-      else playerItemEl.value = "choiceband";
+      playerItemEl.value = "none";
+
       updateItemInfo();
       populateMoveDropdownAndTable();
     }
@@ -1187,7 +1258,7 @@
     playerNatureEl.addEventListener("change", updateLivePanels);
     playerItemEl.addEventListener("change", () => {
       updateItemInfo();
-      populateMoveDropdownAndTable(); // to show/hide Z-move
+      populateMoveDropdownAndTable();
       updateLivePanels();
     });
     playerMoveEl.addEventListener("change", updateLivePanels);
@@ -1264,7 +1335,7 @@
 
       ctx.fillStyle = "#0f172a";
       ctx.font = "18px Arial";
-      ctx.fillText("DM Kevin this image.", 40, 325);
+      ctx.fillText("DM Kevin your results image.", 40, 325);
 
       const ts = new Date().toLocaleString();
       ctx.font = "14px Arial";
@@ -1299,7 +1370,6 @@
     });
 
     (function init() {
-      // defaults
       applyDefaultItemAndNature(playerPokemonEl.value);
       setDefaultEVsForPokemon();
       populateMoveDropdownAndTable();
