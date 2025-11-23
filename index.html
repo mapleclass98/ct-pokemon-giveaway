@@ -86,21 +86,20 @@
       height: auto;
       transition: transform 0.15s ease-out, filter 0.15s ease-out, opacity 0.15s ease-out;
     }
-    .sprite-left { transform: scaleX(-1); }
-    .sprite-right { transform: scaleX(1); }
+    .sprite-left { transform: none; }
+    .sprite-right { transform: none; }
 
-    /* UPDATED: bigger lunge forward */
     @keyframes attackLeft {
-      0%   { transform: scaleX(-1) translateX(0); }
-      40%  { transform: scaleX(-1) translateX(70px); }
-      70%  { transform: scaleX(-1) translateX(70px); }
-      100% { transform: scaleX(-1) translateX(0); }
+      0%   { transform: translateX(0); }
+      40%  { transform: translateX(70px); }
+      70%  { transform: translateX(70px); }
+      100% { transform: translateX(0); }
     }
     @keyframes attackRight {
-      0%   { transform: scaleX(1) translateX(0); }
-      40%  { transform: scaleX(1) translateX(-70px); }
-      70%  { transform: scaleX(1) translateX(-70px); }
-      100% { transform: scaleX(1) translateX(0); }
+      0%   { transform: translateX(0); }
+      40%  { transform: translateX(-70px); }
+      70%  { transform: translateX(-70px); }
+      100% { transform: translateX(0); }
     }
     .sprite-attack-left  { animation: attackLeft 0.5s ease-out; }
     .sprite-attack-right { animation: attackRight 0.5s ease-out; }
@@ -112,7 +111,6 @@
     }
     .hit-flash { animation: hitFlash 0.25s ease-out; }
 
-    /* NEW: defender shake on impact */
     @keyframes defenderShake {
       0% { transform: translateX(0); }
       25% { transform: translateX(-8px); }
@@ -474,7 +472,9 @@
           { id: "gigaimpact",   name: "Giga Impact",   type: "Normal",  category: "Physical", power: 150 },
           { id: "outrage",      name: "Outrage",       type: "Dragon",  category: "Physical", power: 120 },
           { id: "superpower",   name: "Superpower",    type: "Fighting",category: "Physical", power: 120 },
-          { id: "earthquake",   name: "Earthquake",    type: "Ground",  category: "Physical", power: 100 }
+          { id: "earthquake",   name: "Earthquake",    type: "Ground",  category: "Physical", power: 100 },
+          { id: "fly",          name: "Fly",           type: "Flying",  category: "Physical", power: 90 },
+          { id: "supersonicskystrike", name: "Supersonic Skystrike", type: "Flying", category: "Physical", power: 175, zMoveOf: "fly" }
         ],
         opponentMoves: [
           { id: "earthquake",   name: "Earthquake",    type: "Ground",  category: "Physical", power: 100 },
@@ -514,7 +514,8 @@
         { id: "none",         name: "None",         description: "No Held Item.", effect: {} },
         { id: "choiceband",   name: "Choice Band",  description: "Boosts Attack by 50%.", effect: { attackMultiplier: 1.5 } },
         { id: "expertbelt",   name: "Expert Belt",  description: "Boosts super-effective moves (about 20%).", effect: { expertBelt: true } },
-        { id: "focussash",    name: "Focus Sash",   description: "If at full HP, survives a would-be KO with 1 HP.", effect: { focusSash: true } }
+        { id: "focussash",    name: "Focus Sash",   description: "If at full HP, survives a would-be KO with 1 HP.", effect: { focusSash: true } },
+        { id: "flyiniumz",    name: "Flyinium Z",   description: "Enables Supersonic Skystrike (Z-Fly) move.", effect: { flyiniumZ: true } }
       ]
     };
 
@@ -838,7 +839,8 @@
       const itemId = playerItemEl.value;
 
       pData.moves.forEach(m => {
-        if (m.zMoveOf && itemId !== "steeliumz") return;
+        if (m.zMoveOf && m.zMoveOf === "flashcannon" && itemId !== "steeliumz") return;
+        if (m.zMoveOf && m.zMoveOf === "fly" && itemId !== "flyiniumz") return;
 
         const opt = document.createElement("option");
         opt.value = m.id;
@@ -1037,16 +1039,23 @@
       return { damage, info };
     }
 
-    /* UPDATED: attacker lunge + defender flash + shake */
-    function triggerAttackAnimation(isOpponentAttack) {
-      const attackerSprite = isOpponentAttack ? opponentSpriteEl : playerSpriteEl;
-      const defenderSprite = isOpponentAttack ? playerSpriteEl : opponentSpriteEl;
+    function triggerAttackAnimation(attackerIsOpponent) {
+      const attackerSprite = attackerIsOpponent ? opponentSpriteEl : playerSpriteEl;
+      const defenderSprite = attackerIsOpponent ? playerSpriteEl : opponentSpriteEl;
 
-      attackerSprite.classList.remove("sprite-attack-left", "sprite-attack-right");
-      defenderSprite.classList.remove("hit-flash", "defender-shake");
-      void attackerSprite.offsetWidth; // reflow so animation restarts
+      [attackerSprite, defenderSprite].forEach(spr => {
+        spr.classList.remove(
+          "sprite-attack-left",
+          "sprite-attack-right",
+          "hit-flash",
+          "defender-shake"
+        );
+      });
 
-      attackerSprite.classList.add(isOpponentAttack ? "sprite-attack-right" : "sprite-attack-left");
+      void attackerSprite.offsetWidth;
+      void defenderSprite.offsetWidth;
+
+      attackerSprite.classList.add(attackerIsOpponent ? "sprite-attack-right" : "sprite-attack-left");
       defenderSprite.classList.add("hit-flash", "defender-shake");
     }
 
@@ -1092,11 +1101,22 @@
       playerSpriteEl.classList.remove("fainted");
       opponentSpriteEl.classList.remove("fainted");
 
+      [playerSpriteEl, opponentSpriteEl].forEach(el => {
+        el.classList.remove(
+          "sprite-attack-left",
+          "sprite-attack-right",
+          "hit-flash",
+          "defender-shake"
+        );
+      });
+      void playerSpriteEl.offsetWidth;
+      void opponentSpriteEl.offsetWidth;
+
       const playerFirst = player.spe >= opponent.spe;
 
       let log = "";
       logEl.textContent = "";
-      async function pushLog(lines, delayMs=2000) {
+      async function pushLog(lines, delayMs=1500) {
         for (const line of lines) {
           log += line + "\n";
           logEl.textContent = log;
@@ -1113,7 +1133,7 @@
           typeMult = 0;
         }
 
-        const isOpp = attackerLabel.startsWith("Opponent");
+        const isOpp = attacker.id !== player.id;
         const shownMoveName = isOpp ? "<    >" : move.name;
 
         triggerAttackAnimation(isOpp);
@@ -1123,10 +1143,8 @@
         damage = applied.damage;
         const info = applied.info;
 
-        // 1) show move-used line
         await pushLog([`${attackerLabel} ${attacker.name} used ${shownMoveName} move!`]);
 
-        // 2) start HP drop immediately
         const preHP = defender.hp;
         defender.hp = Math.max(0, defender.hp - damage);
         const postHP = defender.hp;
@@ -1143,7 +1161,6 @@
 
         const animStart = performance.now();
 
-        // 3) effectiveness/yache while bar is dropping
         const midLines = [];
         if (typeMult === 0) {
           midLines.push(`It had no effect...`);
@@ -1159,12 +1176,10 @@
 
         if (midLines.length) await pushLog(midLines);
 
-        // 4) wait for animation to finish
         const elapsed = performance.now() - animStart;
         const remaining = durationMs - elapsed;
         if (remaining > 0) await sleep(remaining + 50);
 
-        // 5) after animation: damage + sash
         const postLines = [];
         postLines.push(`${defenderLabel} ${defender.name} took ${damage} damage (HP: ${defender.hp}/${defender.maxHP}).`);
 
@@ -1174,7 +1189,6 @@
 
         await pushLog(postLines);
 
-        // 6) faint text + sprite darken together
         if (defender.hp <= 0) {
           const defenderSprite = defenderLabel.startsWith("Your") ? playerSpriteEl : opponentSpriteEl;
           defenderSprite.classList.add("fainted");
@@ -1194,7 +1208,6 @@
         }
       }
 
-      // keep UI consistent after turn ends
       playerSpriteEl.classList.toggle("fainted", player.hp <= 0);
       opponentSpriteEl.classList.toggle("fainted", opponent.hp <= 0);
 
@@ -1209,12 +1222,12 @@
       }
 
       if (playerWin) {
-        if (playerId === "magearna" && firstWinMagearna === null) {
-          firstWinMagearna = attemptsMagearna;
+        if (playerId === "magearna") {
+          if (firstWinMagearna === null) firstWinMagearna = attemptsMagearna;
           clearedBuildMagearna = snapshotCurrentBuild("magearna");
         }
-        if (playerId === "landorus-t" && firstWinLando === null) {
-          firstWinLando = attemptsLando;
+        if (playerId === "landorus-t") {
+          if (firstWinLando === null) firstWinLando = attemptsLando;
           clearedBuildLando = snapshotCurrentBuild("landorus-t");
         }
         saveProgress();
@@ -1306,6 +1319,7 @@
 
       const magearnaCleared = firstWinMagearna !== null;
       const landoCleared = firstWinLando !== null;
+      const gauntletComplete = magearnaCleared && landoCleared;
 
       ctx.font = "bold 20px Arial";
       ctx.fillStyle = magearnaCleared ? "#16a34a" : "#b91c1c";
@@ -1313,12 +1327,14 @@
         `Magearna: ${magearnaCleared ? "CLEARED" : "NOT COMPLETED"}${magearnaCleared ? ` on attempt #${firstWinMagearna}` : ""}`,
         40, 150
       );
-      ctx.fillStyle = "#0f172a";
-      ctx.font = "18px Arial";
-      ctx.fillText(
-        `Build — EVs: ${fmtEvs(clearedBuildMagearna?.evs)} | Nature: ${clearedBuildMagearna?.nature || "—"} | Item: ${clearedBuildMagearna?.itemName || "—"}`,
-        60, 180
-      );
+      if (gauntletComplete) {
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "18px Arial";
+        ctx.fillText(
+          `Build — EVs: ${fmtEvs(clearedBuildMagearna?.evs)} | Nature: ${clearedBuildMagearna?.nature || "—"} | Item: ${clearedBuildMagearna?.itemName || "—"}`,
+          60, 180
+        );
+      }
 
       ctx.font = "bold 20px Arial";
       ctx.fillStyle = landoCleared ? "#16a34a" : "#b91c1c";
@@ -1326,12 +1342,14 @@
         `Landorus-T: ${landoCleared ? "CLEARED" : "NOT COMPLETED"}${landoCleared ? ` on attempt #${firstWinLando}` : ""}`,
         40, 235
       );
-      ctx.fillStyle = "#0f172a";
-      ctx.font = "18px Arial";
-      ctx.fillText(
-        `Build — EVs: ${fmtEvs(clearedBuildLando?.evs)} | Nature: ${clearedBuildLando?.nature || "—"} | Item: ${clearedBuildLando?.itemName || "—"}`,
-        60, 265
-      );
+      if (gauntletComplete) {
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "18px Arial";
+        ctx.fillText(
+          `Build — EVs: ${fmtEvs(clearedBuildLando?.evs)} | Nature: ${clearedBuildLando?.nature || "—"} | Item: ${clearedBuildLando?.itemName || "—"}`,
+          60, 265
+        );
+      }
 
       ctx.fillStyle = "#0f172a";
       ctx.font = "18px Arial";
