@@ -3,7 +3,7 @@ ct-pokemon-giveaway
 
 script:
 
-<script?
+<script>
     const LEVEL = 100;
 
     const pokemonData = {
@@ -963,4 +963,4 @@ script:
       updateSimulateEnabled();
     })();
 
-    </script?
+</script>
